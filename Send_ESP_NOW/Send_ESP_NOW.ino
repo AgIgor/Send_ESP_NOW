@@ -3,14 +3,13 @@
 
 #define LED_BUILTIN 2
 
-uint8_t broadcastAddress[] = {0x58,0xBF,0x25,0x81,0x3E,0x98};
-// mac metalico 0x40,0x22,0xD8,0x5F,0xF7,0xFC
+uint8_t broadcastAddress[] = {0x40,0x22,0xD8,0x5F,0xF7,0xFC};// mac metalico
+//uint8_t broadcastAddress[] = {0x58,0xBF,0x25,0x81,0x3E,0x98};//mac aberto 
+
 
 // Definir a estrutura para o pacote de dados
 typedef struct struct_message {
-  char data[32];
-  int counter;
-  long int millis;
+  int servoA, servoB;
   bool led;
 } struct_message;
 
@@ -19,6 +18,8 @@ struct_message myData;
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t sendStatus) { 
   Serial.println(sendStatus == 0 ? "Entregue":"Não entregue");
+  digitalWrite(LED_BUILTIN, sendStatus == 0 ? LOW : HIGH);
+
 }//end OnDataSent
 
 void setup() {
@@ -67,17 +68,20 @@ void setup() {
 }//end setup
 
 void loop() {
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(LED_BUILTIN, HIGH);
   // Construir o pacote de dados
-  strcpy(myData.data, "Hello world");
-  myData.counter++;
-  myData.millis = millis();
+  //strcpy(myData.data, "Hello world");
+
+  myData.servoA < 180 ? myData.servoA += 10 : myData.servoA = 0;
+  myData.servoB < 180 ? myData.servoB += 10 : myData.servoB = 0;
+
   myData.led = !myData.led;
+
+  Serial.println(myData.servoA);
+  Serial.println(myData.servoB);
 
   // Enviar o pacote de dados para o receptor
   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
   //Serial.println(result == ESP_OK?"PKG_OK":"PKG_ERROR");
-  delay(1000);
-  digitalWrite(LED_BUILTIN, HIGH);
   delay(1000);
 }//end loop
